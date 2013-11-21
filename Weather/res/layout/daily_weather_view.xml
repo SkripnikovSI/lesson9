@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+    <TextView
+            android:id="@+id/text_time"
+            android:paddingLeft="4dp"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/darker_gray"
+            android:textColor="@android:color/black"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    <ImageView android:id="@+id/image_weather"
+               android:layout_width="fill_parent"
+               android:layout_height="wrap_content"
+               android:contentDescription="@string/add_city"
+               android:gravity="center"/>
+    <LinearLayout  android:orientation="horizontal"
+                   android:layout_width="match_parent"
+                   android:layout_height="fill_parent">
+        <TextView
+                android:id="@+id/text_temp_night"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:textStyle="bold"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:gravity="center"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:gravity="center"
+                android:text="@string/dash"/>
+        <TextView
+                android:id="@+id/text_temp_day"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:textStyle="bold"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:gravity="center"/>
+    </LinearLayout>
+</LinearLayout>
