@@ -63,7 +63,7 @@ public class AddCityActivity extends FindLocationActivity {
             } else {
                 cities = NULL_CITIES;
             }
-            if (locationIsFound && cities != NULL_CITIES)
+            if (locationIsFound)
                 for (City city : cities) city.setDistance(lat, lon);
             return null;
         }

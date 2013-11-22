@@ -16,9 +16,10 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 
 public class MainActivity extends FindLocationActivity {
+    public static final String PREFERENCE_POSITION = "position";
+
     private RelativeLayout pb;
     private SharedPreferences sp;
-    public static final String PREFERENCE_POSITION = "position";
     private CurrentWeatherView cwv;
     private City[] cities;
     private WeatherFetcher wf;
@@ -58,6 +59,7 @@ public class MainActivity extends FindLocationActivity {
         }
         dbs.destroy();
     }
+
     private void initActionBar() {
         if (locationIsFound && cities != null && cities.length > 0)
             for (City city : cities) city.setDistance(lat, lon);
@@ -75,7 +77,10 @@ public class MainActivity extends FindLocationActivity {
     private void getWeathers() {
         if (wf != null)
             wf.cancel(true);
-        wf = new WeatherFetcher(cities[getActionBar().getSelectedNavigationIndex()], null);
+        if (cities.length > 1)
+            wf = new WeatherFetcher(cities[getActionBar().getSelectedNavigationIndex()], null);
+        else
+            wf = new WeatherFetcher(cities[0], null);
         wf.execute();
         pb.setVisibility(View.VISIBLE);
     }
@@ -117,7 +122,7 @@ public class MainActivity extends FindLocationActivity {
 
         @Override
         protected Void doInBackground(Void... params) {
-            if(isCancelled())
+            if (isCancelled())
                 return null;
             if (weatherUpdater == WeatherUpdater.CURRENT_WEATHER) {
                 WeatherAPI.updateCurrentWeather(city, this);
@@ -136,7 +141,7 @@ public class MainActivity extends FindLocationActivity {
         @Override
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
-            if(isCancelled())
+            if (isCancelled())
                 return;
             if (weatherUpdater == WeatherUpdater.CURRENT_WEATHER) {
                 cwv.update(city);

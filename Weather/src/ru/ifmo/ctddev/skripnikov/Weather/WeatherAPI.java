@@ -146,23 +146,18 @@ public class WeatherAPI {
         InputStream is = null;
         try {
             URL url = new URL(stringUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setReadTimeout(10000);
-            connection.setConnectTimeout(15000);
-            connection.setRequestMethod("GET");
-            connection.setDoInput(true);
-
             for (int i = 0; i < 10 && is == null; i++) {
                 try {
-                    connection.connect();
-                    is = connection.getInputStream();
-                } catch (IOException e) {
-                    connection.disconnect();
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setReadTimeout(10000);
                     connection.setConnectTimeout(15000);
                     connection.setRequestMethod("GET");
                     connection.setDoInput(true);
+                    connection.connect();
+                    is = connection.getInputStream();
+                } catch (IOException e) {
+                    if (connection != null)
+                        connection.disconnect();
                 }
                 if (at.isCancelled())
                     break;
