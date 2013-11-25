@@ -39,6 +39,8 @@ public class CurrentWeatherView extends WeatherView {
 
     public void update(City city) {
         Weather weather = city.getCurrentWeather();
+        if(weather == null)
+            return;
         description.setText(weather.description);
         if (weather.temp > 0) {
             temp.setText("+" + Float.toString(weather.temp) + "°");

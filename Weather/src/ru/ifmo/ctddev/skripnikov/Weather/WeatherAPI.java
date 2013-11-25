@@ -58,8 +58,8 @@ public class WeatherAPI {
             Weather[] fWeather = new Weather[jArray.length()];
             for (int i = 0; i < jArray.length(); i++)
                 fWeather[i] = getWeatherFromJSONObject(jArray.getJSONObject(i));
+
             city.setForecastWeather(fWeather);
-            city.setCurrentWeather(getWeatherFromJSONObject(new JSONObject(jString)));
         } catch (JSONException e) {
             e.printStackTrace();
             return false;

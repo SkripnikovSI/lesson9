@@ -64,6 +64,8 @@ public class City {
     }
 
     public Weather[] getForecastWeather() {
+        if(fWeather == null)
+            fWeather = new Weather[0];
         ArrayList<Weather> al = new ArrayList<Weather>();
         for (Weather aFWeather : fWeather)
             if (aFWeather.time > cWeather.time)
