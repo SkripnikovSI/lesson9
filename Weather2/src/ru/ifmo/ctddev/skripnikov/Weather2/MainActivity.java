@@ -1,7 +1,6 @@
 package ru.ifmo.ctddev.skripnikov.Weather2;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -9,17 +8,14 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 
 public class MainActivity extends FindLocationActivity {
 
     public static final String PREFERENCE_POSITION = "position";
 
     private SharedPreferences sp;
-    private RelativeLayout pb;
+    private ProgressBarView progressBar;
     private CurrentWeatherView cwv;
     private City[] cities;
     private ListView fw;
@@ -30,14 +26,11 @@ public class MainActivity extends FindLocationActivity {
         setContentView(R.layout.main_activity);
         cwv = (CurrentWeatherView) findViewById(R.id.current_weather);
         fw = (ListView) findViewById(R.id.forecast_weather);
-        pb = (RelativeLayout) findViewById(R.id.progressBar);
+        progressBar = (ProgressBarView) findViewById(R.id.progress_bar);
+        progressBar.setText(getResources().getString(R.string.fetching_weather));
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-        DBStorage dbs = new DBStorage(this);
-        cities = dbs.getCities();
-        findLocation();
-        if (locationIsFound)
-            for (City city : cities) city.setDistance(lat, lon);
+        fetchCities();
         if (cities.length == 0) {
             Intent intent = new Intent(this, AddCityActivity.class);
             startActivity(intent);
@@ -53,19 +46,26 @@ public class MainActivity extends FindLocationActivity {
             getActionBar().setSelectedNavigationItem(sp.getInt(PREFERENCE_POSITION, 0));
             fetchWeather();
         }
-        dbs.destroy();
     }
 
     private void fetchWeather() {
-        WeatherFetcher wf = new WeatherFetcher(cities[getActionBar().getSelectedNavigationIndex()]);
-        wf.execute();
-        pb.setVisibility(View.VISIBLE);
+        City city = cities[getActionBar().getSelectedNavigationIndex()];
+        WeatherFetcher wf = new WeatherFetcher(city);
+        wf.execute(city.latitude, city.longitude);
+    }
+
+    private void fetchCities() {
+        DBStorage dbs = new DBStorage(this);
+        cities = dbs.getCities();
+        dbs.destroy();
+        findLocation();
+        if (locationIsFound)
+            for (City city : cities) city.setDistance(lat, lon);
     }
 
     public void onRestart() {
         super.onRestart();
-        DBStorage dbs = new DBStorage(this);
-        cities = dbs.getCities();
+        fetchCities();
         if (cities.length == 0) {
             finish();
         } else {
@@ -79,7 +79,6 @@ public class MainActivity extends FindLocationActivity {
             });
             getActionBar().setSelectedNavigationItem(sp.getInt(PREFERENCE_POSITION, 0));
         }
-        dbs.destroy();
     }
 
     public void onStop() {
@@ -107,7 +106,7 @@ public class MainActivity extends FindLocationActivity {
         }
     }
 
-    private class WeatherFetcher extends AsyncTask<Void, Void, Void> {
+    private class WeatherFetcher extends AsyncTask<Float, Void, Weather> {
         private City city;
 
         WeatherFetcher(City city) {
@@ -115,18 +114,23 @@ public class MainActivity extends FindLocationActivity {
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
-            WorldWeatherOnlineAPI.updateWeather(city);
-            return null;
+        protected void onPreExecute() {
+            progressBar.show();
         }
 
         @Override
-        protected void onPostExecute(Void param) {
+        protected Weather doInBackground(Float... params) {
+            return WorldWeatherOnlineAPI.getWeather(params[0], params[1]);
+        }
+
+        @Override
+        protected void onPostExecute(Weather param) {
             super.onPostExecute(param);
+            city.setWeather(param);
             cwv.update(city);
             ForecastWeatherListAdapter adapter = new ForecastWeatherListAdapter(getBaseContext(), city.getForecastWeather());
             fw.setAdapter(adapter);
-            pb.setVisibility(View.INVISIBLE);
+            progressBar.hide();
         }
     }
 }

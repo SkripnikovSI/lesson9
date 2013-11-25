@@ -17,66 +17,58 @@ public class WorldWeatherOnlineAPI {
     private static final String BASE = "http://api.worldweatheronline.com/free/v1/";
     private static final String APP_ID = "&format=json&key=s2pufaxvwh4fwzfx6rrnpthg";
     public static final City[] NULL_CITIES = {};
+    public static final Weather NULL_WEATHER = new Weather(null, new ForecastWeather[0]);
 
-    public static City[] getCitiesByCoordinates(double lat, double lon) {
-        try {
-            return getCitiesFromJSONString(getJSONStringByURL(BASE + "search.ashx?q=" +
-                    Double.toString(lat) + "%2C" +
-                    Double.toString(lon) + APP_ID));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return NULL_CITIES;
+    public static City[] getCitiesByCoordinates(float lat, float lon) {
+        return getCitiesFromJSONString(getJSONStringByURL(BASE + "search.ashx?q=" +
+                Float.toString(lat) + "%2C" +
+                Float.toString(lon) + APP_ID));
     }
 
     public static City[] getCitiesByName(String name) {
-        try {
-            return getCitiesFromJSONString(getJSONStringByURL(BASE + "search.ashx?q=" + name + APP_ID));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        return getCitiesFromJSONString(getJSONStringByURL(BASE + "search.ashx?q=" + name + APP_ID));
+    }
+
+    public static Weather getWeather(float lat, float lon) {
+        String jString = getJSONStringByURL(BASE + "weather.ashx?q=" + lat + "%2C" + lon + "&num_of_days=5" + APP_ID);
+        if (jString != null)
+            try {
+                JSONObject jObject = new JSONObject(jString);
+                jObject = jObject.getJSONObject("data");
+                JSONArray jsonArray = jObject.getJSONArray("weather");
+                ForecastWeather[] forecastWeathers = new ForecastWeather[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); i++)
+                    forecastWeathers[i] = new ForecastWeather(jsonArray.getJSONObject(i));
+                return new Weather(new CurrentWeather(jObject.getJSONArray("current_condition").getJSONObject(0)),
+                        forecastWeathers);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        return NULL_WEATHER;
+    }
+
+    private static City[] getCitiesFromJSONString(String jString) {
+        if (jString != null)
+            try {
+                JSONObject jObject = new JSONObject(jString);
+                jObject = jObject.getJSONObject("search_api");
+                JSONArray jArray = jObject.getJSONArray("result");
+                City[] cities = new City[jArray.length()];
+                for (int i = 0; i < jArray.length(); i++) {
+                    String name = jArray.getJSONObject(i).getJSONArray("areaName").getJSONObject(0).getString("value");
+                    String region = jArray.getJSONObject(i).getJSONArray("region").getJSONObject(0).getString("value");
+                    String country = jArray.getJSONObject(i).getJSONArray("country").getJSONObject(0).getString("value");
+                    float latitude = (float) jArray.getJSONObject(i).getDouble("latitude");
+                    float longitude = (float) jArray.getJSONObject(i).getDouble("longitude");
+                    cities[i] = new City(name, region, country, latitude, longitude);
+                }
+                return cities;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         return NULL_CITIES;
-    }
-
-    public static boolean updateWeather(City city) {
-        String jString = getJSONStringByURL(BASE + "weather.ashx?q=" + city.latitude + "%2C" + city.longitude + "&num_of_days=5" + APP_ID);
-        if (jString == null)
-            return false;
-        try {
-            JSONObject jObject = new JSONObject(jString);
-            jObject = jObject.getJSONObject("data");
-            city.setCurrentWeather(new CurrentWeather(jObject.getJSONArray("current_condition").getJSONObject(0)));
-            JSONArray jsonArray = jObject.getJSONArray("weather");
-            ForecastWeather[] forecastWeathers = new ForecastWeather[jsonArray.length()];
-            for (int i = 0; i < jsonArray.length(); i++)
-                forecastWeathers[i] = new ForecastWeather(jsonArray.getJSONObject(i));
-            city.setForecastWeather(forecastWeathers);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    private static City[] getCitiesFromJSONString(String jString) throws JSONException {
-        if (jString == null)
-            return NULL_CITIES;
-        JSONObject jObject = new JSONObject(jString);
-        jObject = jObject.getJSONObject("search_api");
-        JSONArray jArray = jObject.getJSONArray("result");
-        City[] cities = new City[jArray.length()];
-        for (int i = 0; i < jArray.length(); i++) {
-            String name = jArray.getJSONObject(i).getJSONArray("areaName").getJSONObject(0).getString("value");
-            String region = jArray.getJSONObject(i).getJSONArray("region").getJSONObject(0).getString("value");
-            String country = jArray.getJSONObject(i).getJSONArray("country").getJSONObject(0).getString("value");
-            float latitude = (float) jArray.getJSONObject(i).getDouble("latitude");
-            float longitude = (float) jArray.getJSONObject(i).getDouble("longitude");
-            cities[i] = new City(name, region, country, latitude, longitude);
-        }
-        return cities;
     }
 
     private static String getJSONStringByURL(String stringUrl) {
@@ -98,12 +90,9 @@ public class WorldWeatherOnlineAPI {
                 while ((line = rd.readLine()) != null)
                     builder.append(line);
                 return builder.toString();
-            } else {
-                return null;
             }
         } catch (ProtocolException e) {
             e.printStackTrace();
-            return null;
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {

@@ -7,8 +7,7 @@ public class City {
     public final float latitude;
     public final float longitude;
     private double distance;
-    private CurrentWeather cWeather;
-    private ForecastWeather[] fWeather;
+    private Weather weather;
 
     City(String name,
          String region,
@@ -50,19 +49,15 @@ public class City {
         return ", " + Long.toString(Math.round(distance)) + "km";
     }
 
-    public void setCurrentWeather(CurrentWeather cWeather) {
-        this.cWeather = cWeather;
+    public void setWeather(Weather weather) {
+        this.weather = weather;
     }
 
     public CurrentWeather getCurrentWeather() {
-        return cWeather;
-    }
-
-    public void setForecastWeather(ForecastWeather[] fWeather) {
-        this.fWeather = fWeather;
+        return weather.cWeather;
     }
 
     public ForecastWeather[] getForecastWeather() {
-        return fWeather;
+        return weather.fWeather;
     }
 }

@@ -32,6 +32,7 @@ public class CurrentWeatherView extends RelativeLayout {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE))
                 .inflate(R.layout.current_weather_view, this);
         time = (TextView) findViewById(R.id.text_time);
+        time.setText(getResources().getString(R.string.weather_now));
         description = (TextView) findViewById(R.id.text_description);
         image = (ImageView) findViewById(R.id.image_current_weather);
         temp = (TextView) findViewById(R.id.text_temp);
@@ -42,7 +43,6 @@ public class CurrentWeatherView extends RelativeLayout {
 
     public void update(City city) {
         CurrentWeather weather = city.getCurrentWeather();
-        time.setText(getResources().getString(R.string.weather_now));
         description.setText(weather.weatherDesc);
         if (weather.temp_C > 0) {
             temp.setText("+" + Integer.toString(weather.temp_C) + "°");

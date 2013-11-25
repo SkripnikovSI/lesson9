@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 public class AddCityActivity extends FindLocationActivity {
     private ListView citiesList;
     private ProgressBarView progressBar;
-    private String name = "";
     private CitiesFetcher cf;
 
     @Override
@@ -31,8 +30,7 @@ public class AddCityActivity extends FindLocationActivity {
         EditText cityName = (EditText) findViewById(R.id.edit_text_city);
         cityName.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
-                name = s.toString();
-                fetchCities();
+                fetchCities(s.toString());
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -42,47 +40,60 @@ public class AddCityActivity extends FindLocationActivity {
             }
         });
         findLocation();
-        fetchCities();
+        fetchCities(null);
     }
 
-    private void fetchCities() {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void fetchCities(String name) {
+        if(cf != null)
+            cf.cancel(true);
         cf = new CitiesFetcher();
-        cf.execute();
-        progressBar.setVisibility(View.VISIBLE);
+        cf.execute(name);
     }
 
-    private class CitiesFetcher extends AsyncTask<Void, Void, Void> {
-        private City[] cities;
+    private class CitiesFetcher extends AsyncTask<String, Void, City[]> {
+        @Override
+        protected void onPreExecute() {
+            progressBar.show();
+        }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected City[] doInBackground(String... params) {
             try {
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (this != cf)
+            City[] cities = WorldWeatherOnlineAPI.NULL_CITIES;
+            if (isCancelled())
                 return null;
-            name = name.trim();
-            if (name.length() > 0) {
-                name = name.replace(' ', '+');
-                cities = WorldWeatherOnlineAPI.getCitiesByName(name);
-            } else if (locationIsFound) {
-                cities = WorldWeatherOnlineAPI.getCitiesByCoordinates(lat, lon);
+
+            if (params[0] == null || params[0].trim().length() == 0) {
+                if (locationIsFound)
+                    cities = WorldWeatherOnlineAPI.getCitiesByCoordinates(lat, lon);
             } else {
-                cities = WorldWeatherOnlineAPI.NULL_CITIES;
+                cities = WorldWeatherOnlineAPI.getCitiesByName(params[0].trim().replace(' ', '+'));
             }
             if (locationIsFound)
                 for (City city : cities) city.setDistance(lat, lon);
-            return null;
+            return cities;
         }
 
         @Override
-        protected void onPostExecute(Void param) {
-            super.onPostExecute(param);
-            if (cf != this)
+        protected void onPostExecute(final City[] cities) {
+            super.onPostExecute(cities);
+            if (isCancelled())
                 return;
-            progressBar.setVisibility(View.INVISIBLE);
             CitiesListAdapter adapter = new CitiesListAdapter(getBaseContext(), cities);
             citiesList.setAdapter(adapter);
             citiesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -94,18 +105,7 @@ public class AddCityActivity extends FindLocationActivity {
                     finish();
                 }
             });
-
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            progressBar.hide();
         }
     }
 }
